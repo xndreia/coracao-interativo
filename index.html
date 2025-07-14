@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Coração Preenchido com Partículas</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const particles = [];
+const mouse = { x: null, y: null };
+
+// Função que define se um ponto está dentro do formato de coração
+function isInHeart(x, y) {
+  x = x / 20;
+  y = y / 20;
+  const eq = Math.pow(Math.pow(x, 2) + Math.pow(y, 2) - 1, 3) - Math.pow(x, 2) * Math.pow(y, 3);
+  return eq <= 0;
+}
+
+// Gera partículas pequenas preenchendo todo o coração
+function generateParticles() {
+  for (let x = -300; x <= 300; x += 4) {
+    for (let y = -300; y <= 300; y += 4) {
+      if (isInHeart(x / 10, y / 10)) {
+        particles.push({
+          baseX: centerX + x,
+          baseY: centerY - y,
+          x: centerX + x,
+          y: centerY - y,
+          size: 1.5,
+          density: Math.random() * 20 + 1
+        });
+      }
+    }
+  }
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let p of particles) {
+    const dx = mouse.x - p.x;
+    const dy = mouse.y - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const maxDist = 100;
+    const force = (maxDist - dist) / maxDist;
+
+    if (dist < maxDist) {
+      const fx = dx / dist * force * p.density;
+      const fy = dy / dist * force * p.density;
+      p.x -= fx;
+      p.y -= fy;
+    } else {
+      p.x += (p.baseX - p.x) / 10;
+      p.y += (p.baseY - p.y) / 10;
+    }
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = "red";
+    ctx.fill();
+  }
+  requestAnimationFrame(drawParticles);
+}
+
+window.addEventListener("mousemove", e => {
+  mouse.x = e.x;
+  mouse.y = e.y;
+});
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+generateParticles();
+drawParticles();
+</script>
+</body>
+</html>
